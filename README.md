@@ -67,7 +67,8 @@ rattachées à PSN (choix validé le 29 octobre 2026). Pour changer un rattachem
 
 Les zones dessinées sur la carte viennent de `zones.json` : les quartiers de chaque boucle
 fusionnés en un seul contour, plus le contour de la ville. Les logos (`img/`) sont les
-bandeaux Telegram de `../visus/logos_telegram/bandeau`, réduits à 128 px. La couleur d'une
+bandeaux Telegram de `../visus/logos_telegram/bandeau`, réduits à 128 px ; `img/logo.png`
+(en-tête et icône d'onglet) est celui du pôle tractage. La couleur d'une
 zone est le champ `c` de sa boucle : trois teintes des visuels Telegram, deux boucles voisines
 n'ayant jamais la même.
 
