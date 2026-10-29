@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4c0297">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Tractage Nanterre</title>
+<link rel="icon" href="img/logo.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;1,800;1,900&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<style>
+/* couleurs des visuels Telegram */
+:root{
+  --violet:#4c0297; --rouge:#d1271c; --lavande:#eadff7;
+  --panel:#fff; --ink:#1c1530; --muted:#6b6480; --line:#e9e4f2; --bg:#f7f5fb;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{font:14px/1.45 "Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+#app{display:flex;height:100vh;overflow:hidden}
+#side{width:400px;min-width:340px;background:var(--panel);border-right:1px solid var(--line);
+      display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+#side > *{flex:none}
+#map{flex:1;min-width:0;background:#f4f2f7}
+button{font:inherit;cursor:pointer;color:inherit}
+.titre{font-weight:900;font-style:italic;color:var(--violet);text-shadow:2px 2px 0 var(--rouge);letter-spacing:-.3px}
+header{display:flex;align-items:center;gap:12px;padding:14px 16px 10px}
+header img{width:52px;height:52px;flex:none}
+header h1{margin:0;font-size:28px;line-height:1}
+header p{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+.vac{margin:0 16px 10px;padding:8px 11px;border-radius:10px;background:#fbe3e1;color:#7d1710;font-size:12.5px}
+.tabs{display:flex;margin:0 16px;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;border:0;background:0;padding:10px 6px 9px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--violet);border-bottom-color:var(--rouge)}
+.tabs .n{display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:999px;background:var(--lavande);color:var(--violet);font-size:11.5px}
+.outils{padding:12px 16px 4px}
+.leg{display:flex;flex-wrap:wrap;gap:6px}
+.leg button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;
+  padding:4px 10px 4px 4px;font-size:12.5px}
+.leg button.off{opacity:.38}
+.leg .n{color:var(--muted);font-size:11.5px}
+.dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:13px;flex:none}
+.taille{margin:8px 0 0;font-size:11.5px;color:var(--muted)}
+input[type=search]{width:100%;margin-top:10px;font:inherit;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.bou{border-top:1px solid var(--line);margin-top:8px}
+.bh{display:flex;align-items:center;gap:10px;width:100%;border:0;background:#fff;padding:10px 16px;text-align:left;position:sticky;top:0;z-index:2}
+.bh:hover{background:var(--bg)}
+.bh img{width:38px;height:38px;flex:none}
+.bh .nm{font-size:16px;font-weight:800;font-style:italic;color:var(--violet)}
+.bh .n{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.it{display:flex;gap:10px;align-items:flex-start;padding:6px 16px 6px 22px;cursor:pointer}
+.it:hover{background:var(--bg)}
+.it.cur{background:var(--lavande)}
+.it .tx{min-width:0;flex:1}
+.it .nm{font-weight:600;font-size:13px}
+.it .q{font-size:11.5px;color:var(--muted)}
+.empty{padding:16px;color:var(--muted);font-size:13px}
+/* agenda */
+.ag{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.ag:hover{background:var(--bg)}
+.ag .dt{width:58px;flex:none;text-align:center;border-radius:12px;background:var(--lavande);color:var(--violet);padding:6px 2px;line-height:1.1}
+.ag .dt b{display:block;font-size:22px;font-weight:900;font-style:italic}
+.ag .dt span{font-size:11px;text-transform:uppercase;font-weight:700}
+.ag .nm{font-weight:700;font-size:14px}
+.ag .m{font-size:12px;color:var(--muted)}
+.ag .m img{width:18px;height:18px;vertical-align:-4px;margin-right:3px}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;border-radius:5px;padding:1px 6px;background:#fdf0dc;color:#9a5b00;margin-left:4px}
+.tag.ok{background:#e4f4ea;color:#0e6b3c}
+details.an{margin:6px 16px 16px}
+details.an summary{cursor:pointer;font-weight:700;color:var(--violet);padding:8px 0}
+details.an li{font-size:12.5px;margin:3px 0}
+details.an li span{color:var(--muted)}
+/* carte */
+.leaflet-container{font-family:inherit}
+/* sans ça, le navigateur encadre d'un rectangle de focus la zone cliquée */
+path.leaflet-interactive:focus{outline:none}
+.fond{filter:saturate(.35) contrast(.92) brightness(1.04)}
+button.ville{border:0;border-radius:999px;padding:8px 14px;background:var(--violet);color:#fff;font-weight:700;
+  box-shadow:0 2px 6px rgba(28,21,48,.35);display:flex;align-items:center;gap:6px}
+.pin{border-radius:50%;border:2.5px solid #fff;box-shadow:0 1px 5px rgba(28,21,48,.45);display:grid;place-items:center;color:#fff}
+.pin.maybe{border-style:dashed;opacity:.75}
+.pin.cur{box-shadow:0 0 0 4px rgba(209,39,28,.55),0 1px 5px rgba(28,21,48,.45)}
+.evpin{border-radius:50%;background:#ffc21a;border:3px solid var(--violet);display:grid;place-items:center;color:var(--violet);
+  box-shadow:0 2px 6px rgba(28,21,48,.45)}
+.blogo{border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(28,21,48,.35);transition:transform .15s}
+.bh img,.ag .m img,#grabBtn img,header img{border-radius:50%}
+/* vue d'ensemble : marqueurs réduits pour laisser lire les zones */
+#map.loin .pin,#map.loin .evpin{transform:scale(.78)}
+.blogo:hover{transform:scale(1.08)}
+.leaflet-popup-content-wrapper{border-radius:14px}
+.leaflet-popup-content{margin:0;min-width:240px}
+.pop{font-size:12.5px;line-height:1.45}
+.pop .hd{display:flex;gap:10px;align-items:center;padding:12px 14px 8px}
+.pop .hd .dot{width:32px;height:32px;font-size:18px}
+.pop h4{margin:0;font-size:14.5px}
+.pop .m{color:var(--muted);font-size:11.5px}
+.pop .bd{padding:0 14px 12px}
+.pop table{border-collapse:collapse;width:100%;margin:2px 0 6px}
+.pop td{padding:3px 8px 3px 0;vertical-align:top;font-size:12px;border-top:1px solid var(--line)}
+.pop td:first-child{font-weight:700;white-space:nowrap}
+.pop td.af{color:var(--rouge);letter-spacing:-1px;white-space:nowrap;font-size:11px}
+.pop td.af i{font-style:normal;color:#dcd6e6}
+.pop .qd{font-size:12.5px;font-weight:600;margin-top:4px}
+.pop .qd i{color:var(--violet)}
+.pop .nt{background:var(--bg);border-radius:8px;padding:6px 8px;font-size:11.5px;margin-top:4px}
+.pop a.go{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:6px 11px;border-radius:8px;background:var(--violet);color:#fff;text-decoration:none;font-weight:700}
+#grab{display:none}
+
+/* ---------- téléphone ---------- */
+@media (max-width:820px){
+  html,body{overscroll-behavior:none;-webkit-text-size-adjust:100%}
+  #app{display:block;height:100vh;height:100dvh;position:relative}
+  #map{position:absolute;inset:0}
+  #side{position:absolute;left:0;right:0;bottom:0;width:auto;min-width:0;height:80dvh;border-right:0;
+        border-radius:18px 18px 0 0;box-shadow:0 -8px 28px rgba(28,21,48,.25);z-index:1100;
+        transition:transform .28s cubic-bezier(.32,.72,0,1);padding-bottom:env(safe-area-inset-bottom);
+        -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  #side.collapsed{transform:translateY(calc(100% - var(--grabH,56px)))}
+  #grab{display:flex;align-items:center;gap:8px;padding:14px 14px 8px;position:sticky;top:0;z-index:5;background:var(--panel);
+        border-radius:18px 18px 0 0;border-bottom:1px solid var(--line)}
+  #grab::before{content:'';position:absolute;top:6px;left:50%;transform:translateX(-50%);width:38px;height:4px;border-radius:2px;background:#d7d0e4}
+  #grabBtn{flex:1;border:0;background:0;text-align:left;font-weight:700;display:flex;gap:8px;align-items:center;padding:4px 0}
+  #grabBtn img{width:30px;height:30px}
+  #chev{margin-left:auto;color:var(--muted);transition:transform .28s}
+  #side.collapsed #chev{transform:rotate(180deg)}
+  header{display:none}
+  .leg button{padding:6px 12px 6px 5px}
+  input[type=search]{font-size:16px}
+  .it{padding:9px 16px 9px 22px}
+  .leaflet-bottom{bottom:calc(var(--grabH,56px) - 4px)}
+  .leaflet-control-zoom{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="side">
+    <div id="grab">
+      <button id="grabBtn" aria-label="Ouvrir ou fermer le panneau"><img src="img/logo.png" alt=""><span id="grabTxt">Tractage</span><i id="chev" class="ti ti-chevron-down"></i></button>
+    </div>
+    <header>
+      <img src="img/logo.png" alt="">
+      <div><h1 class="titre">Tractage</h1><p>Nanterre · où tracter, boucle par boucle</p></div>
+    </header>
+    <div id="vac" hidden></div>
+    <div class="tabs" id="tabs">
+      <button data-t="lieux" class="on">Lieux<span class="n" id="nL"></span></button>
+      <button data-t="agenda">Agenda<span class="n" id="nA"></span></button>
+    </div>
+    <div id="pLieux">
+      <div class="outils">
+        <div class="leg" id="leg"></div>
+        <p class="taille"><i class="ti ti-circles"></i> Taille des bulles : fréquentation estimée (une gare ≈ 8 000 personnes, une école ≈ 100 à 250 parents)</p>
+        <input type="search" id="q" placeholder="Chercher un lieu, une rue…">
+      </div>
+      <div id="list"></div>
+    </div>
+    <div id="pAgenda" hidden></div>
+  </div>
+  <div id="map"></div>
+</div>
+
+<script>
+const JOURS=['','lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+const J3=['','lun','mar','mer','jeu','ven','sam','dim'];
+const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const HORIZON=60;            // jours : les événements plus lointains ne sont pas posés sur la carte
+let DATA, LIEUX, BOUCLES, CATS, EVTS, ZONES;
+let catOff=new Set(), curId=null, markers={}, zoneLayers={}, logoLayers={}, selB=null;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const today=iso(new Date());
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d);};
+const dShort=s=>{const d=parse(s);return d.getDate()+' '+MOIS[d.getMonth()];};
+const dLong=s=>{const d=parse(s);return JOURS[(d.getDay()+6)%7+1]+' '+d.getDate()+' '+MOIS[d.getMonth()];};
+const hfmt=s=>{const [h,m]=s.split(':');return (+h)+'h'+(m==='00'?'':m);};
+const isMobile=()=>window.matchMedia('(max-width:820px)').matches;
+const boucle=id=>BOUCLES.find(b=>b.id===id);
+const logo=id=>'img/boucle-'+id+'.png';
+
+function joursTxt(j){
+  const s=j.join(',');
+  if(s==='1,2,3,4,5,6,7') return 'tous les jours';
+  if(s==='1,2,3,4,5') return 'lun–ven';
+  if(s==='6,7') return 'week-end';
+  return j.map(x=>J3[x]).join(', ');
+}
+/* « Quand y aller » : créneaux principaux regroupés par jours */
+function quand(l, tous){
+  let crs=l.cr.filter(c=>tous||c.p>=2);
+  if(!crs.length) crs=l.cr;
+  const g={};
+  crs.forEach(c=>{ const k=joursTxt(c.j); (g[k]=g[k]||[]).push(hfmt(c.d)+'–'+hfmt(c.f)); });
+  return Object.entries(g).map(([j,h])=>j+' · '+h.join(', '));
+}
+function fmtRange(e){
+  if(e.d===e.f) return dLong(e.d)+(e.h?' · '+e.h:'');
+  const a=parse(e.d), b=parse(e.f);
+  const deb=a.getMonth()===b.getMonth()?String(a.getDate()):dShort(e.d);
+  // date estimée : la plage est une fourchette, pas la durée de l'événement
+  return (e.statut==='à confirmer'?'vers le '+deb+'–':'du '+deb+' au ')+dShort(e.f)+(e.h?' · '+e.h:'');
+}
+const aVenir=()=>EVTS.filter(e=>e.f>=today).sort((a,b)=>a.d.localeCompare(b.d));
+
+/* ---------- carte ---------- */
+// Réglages d'affichage, essayés tous les deux : à remettre à true pour revenir en arrière.
+const FOND_DESATURE=false;     // fond OpenStreetMap atténué par le filtre .fond
+const LOGOS_SUR_CARTE=false;   // logos Telegram posés au centre de chaque boucle
+const map=L.map('map',{zoomSnap:.25}).setView([48.894,2.205],14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,className:FOND_DESATURE?'fond':'',
+  attribution:'&copy; OpenStreetMap · Éducation nationale'}).addTo(map);
+// logos de boucle au premier plan, au-dessus des marqueurs
+map.createPane('logos'); map.getPane('logos').style.zIndex=640;
+// les logos servent d'étiquettes vues de loin : masqués quand on zoome sur les rues
+map.on('zoomend',()=>{
+  map.getPane('logos').style.display=map.getZoom()>=16?'none':'';
+  $('#map').classList.toggle('loin',map.getZoom()<14.5);
+});
+
+/* Opacité du remplissage d'une zone : sans boucle choisie, toutes teintées ; avec une boucle
+   choisie, elle s'ouvre (on voit les rues) et les autres s'estompent. */
+const remplissage=id=>selB?(id===selB?.04:.72):.45;
+function drawZones(){
+  // hors de Nanterre : voile blanc pour que la ville ressorte ; un clic dessus revient à la ville entière
+  const monde=[[85,-180],[85,180],[-85,180],[-85,-180]];
+  L.polygon([monde,...ZONES.ville],{stroke:false,fillColor:'#fff',fillOpacity:.6}).on('click',()=>choisirBoucle(null)).addTo(map);
+  ZONES.zones.forEach(z=>{
+    const b=boucle(z.id);
+    L.polygon(z.poly,{color:'#fff',weight:7,opacity:1,fill:false,interactive:false}).addTo(map);
+    const pg=L.polygon(z.poly,{color:'#4c0297',weight:2.5,opacity:.9,fillColor:b.c,fillOpacity:remplissage(z.id)}).addTo(map);
+    pg.on('mouseover',()=>{ if(z.id!==selB) pg.setStyle({fillOpacity:Math.min(remplissage(z.id)+.2,.9)}); })
+      .on('mouseout',()=>pg.setStyle({fillOpacity:remplissage(z.id)}));
+    pg.on('click',()=>{ if(z.id!==selB) choisirBoucle(z.id); });
+    zoneLayers[z.id]=pg;
+    if(!LOGOS_SUR_CARTE){ pg.bindTooltip(esc(b.nom),{sticky:true,direction:'top',offset:[0,-8]}); return; }
+    logoLayers[z.id]=L.marker(z.label,{pane:'logos',icon:L.divIcon({className:'',iconSize:[58,58],iconAnchor:[29,29],
+      html:'<img class="blogo" src="'+logo(z.id)+'" width="58" height="58" alt="'+esc(b.nom)+'">'}),keyboard:false})
+     .bindTooltip(esc(b.nom),{direction:'bottom',offset:[0,24]})
+     .on('click',()=>choisirBoucle(z.id)).addTo(map);
+  });
+  L.polygon(ZONES.ville,{color:'#4c0297',weight:4,opacity:1,fill:false,interactive:false}).addTo(map);
+}
+const marges=()=>isMobile()?{paddingTopLeft:[20,20],paddingBottomRight:[20,($('#grab').offsetHeight||56)+20]}:{padding:[30,30]};
+/* Choisir une boucle : son logo s'efface, la carte zoome dessus et le détail des rues apparaît */
+function choisirBoucle(id){
+  selB=id||null;
+  Object.entries(zoneLayers).forEach(([k,pg])=>{
+    pg.setStyle({fillOpacity:remplissage(k),weight:k===selB?4.5:2.5});
+    const el=logoLayers[k]&&logoLayers[k].getElement(); if(el) el.style.display=k===selB?'none':'';
+  });
+  btnVille.getContainer().hidden=!selB;
+  map.stop();                  // un zoom en cours ferait ignorer le nouveau cadrage
+  if(selB){
+    map.fitBounds(zoneLayers[selB].getBounds(),marges());
+    const h=document.querySelector('[data-b="'+selB+'"]');
+    if(h && !isMobile()) h.scrollIntoView({block:'start',behavior:'smooth'});
+  }else map.fitBounds(L.polygon(ZONES.ville).getBounds(),marges());
+}
+const btnVille=L.control({position:'topright'});
+btnVille.onAdd=()=>{
+  const b=L.DomUtil.create('button','ville');
+  b.type='button'; b.innerHTML='<i class="ti ti-arrow-back-up"></i> Toute la ville'; b.hidden=true;
+  L.DomEvent.disableClickPropagation(b); b.onclick=()=>choisirBoucle(null);
+  return b;
+};
+btnVille.addTo(map);
+/* Diamètre de la bulle selon la fréquentation estimée (aff). Échelle logarithmique : une gare
+   (~8 000 personnes) fait deux fois une école (~250), pas trente fois, sinon elle couvrirait
+   le quartier. */
+const taille=l=>Math.round(Math.min(48,Math.max(20,16+14*Math.log10(1+(l.aff||100)/100))));
+function pinHtml(l){
+  const c=CATS[l.cat], d=taille(l);
+  return '<div class="pin'+(l.aConfirmer?' maybe':'')+(l.id===curId?' cur':'')+'" style="width:'+d+'px;height:'+d+'px;background:'+c.c+
+    ';font-size:'+Math.round(d*.55)+'px"><i class="ti ti-'+c.ic+'"></i></div>';
+}
+function icon(l){ const d=taille(l); return L.divIcon({className:'',iconSize:[d,d],iconAnchor:[d/2,d/2],popupAnchor:[0,-d/2],html:pinHtml(l)}); }function popup(l){
+  const c=CATS[l.cat], b=boucle(l.b);
+  let h='<div class="pop"><div class="hd"><span class="dot" style="background:'+c.c+'"><i class="ti ti-'+c.ic+'"></i></span>'+
+    '<div><h4>'+esc(l.nom)+'</h4><div class="m">'+esc(b?b.nom:'')+'</div></div></div><div class="bd">';
+  // fiche : où, puis chaque créneau avec son affluence (●●● forte, ●● moyenne, ● faible)
+  if(l.a) h+='<div class="m"><i class="ti ti-map-pin"></i> '+esc(l.a)+'</div>';
+  if(l.cr.length){
+    h+='<table>'+[...l.cr].sort((x,y)=>x.j[0]-y.j[0]||x.d.localeCompare(y.d)).map(x=>'<tr><td>'+joursTxt(x.j)+'</td><td>'+hfmt(x.d)+'–'+hfmt(x.f)+
+       '</td><td>'+esc(x.l)+'</td><td class="af" title="affluence '+x.p+'/3">'+'●'.repeat(x.p)+'<i>'+'●'.repeat(3-x.p)+'</i></td></tr>').join('')+'</table>';
+  }else h+='<div class="qd"><i class="ti ti-clock"></i> jours et horaires à confirmer</div>';
+  EVTS.filter(e=>(e.refs||[]).includes(l.id) && e.f>=today).forEach(e=>{
+    h+='<div class="nt"><i class="ti ti-confetti"></i> <b>'+esc(e.nom)+'</b> — '+fmtRange(e)+'</div>'; });
+  h+='<a class="go" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+l.lat+','+l.lon+
+     '&travelmode=walking"><i class="ti ti-walk"></i> Itinéraire</a></div></div>';
+  return h;
+}
+function drawMarkers(){
+  LIEUX.forEach(l=>{
+    // les petites bulles passent devant les grosses pour rester cliquables
+    const m=L.marker([l.lat,l.lon],{icon:icon(l),riseOnHover:true,zIndexOffset:-taille(l)*40});
+    m.bindPopup(()=>popup(l),{maxWidth:320});
+    m.on('popupopen',()=>setCur(l.id)).on('popupclose',()=>{ if(curId===l.id) setCur(null); });
+    markers[l.id]=m;
+  });
+}
+function refreshMarkers(){
+  const q=$('#q').value.trim().toLowerCase();
+  LIEUX.forEach(l=>{
+    const m=markers[l.id], on=!catOff.has(l.cat) && (!q || (l.nom+' '+l.a).toLowerCase().includes(q));
+    if(on && !map.hasLayer(m)) m.addTo(map); else if(!on && map.hasLayer(m)) map.removeLayer(m);
+  });
+}
+function setCur(id){
+  const prev=curId; curId=id;
+  [prev,id].forEach(x=>{ const l=x&&LIEUX.find(y=>y.id===x); if(l) markers[x].setIcon(icon(l)); });
+  document.querySelectorAll('.it').forEach(e=>e.classList.toggle('cur',e.dataset.id===id));
+}
+function drawEvents(){
+  const lim=addDays(today,HORIZON);
+  aVenir().filter(e=>e.d<=lim).forEach(e=>{
+    const pts=e.lat!=null?[[e.lat,e.lon]]:(e.refs||[]).map(id=>LIEUX.find(l=>l.id===id)).filter(Boolean).map(l=>[l.lat+.0004,l.lon+.0004]);
+    // en arrière-plan : les lieux passent toujours devant les événements
+    pts.forEach(p=>L.marker(p,{zIndexOffset:-10000,icon:L.divIcon({className:'',iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-14],
+      html:'<div class="evpin" style="width:28px;height:28px;font-size:15px"><i class="ti ti-confetti"></i></div>'})})
+      .bindPopup('<div class="pop"><div class="hd"><span class="dot" style="background:#ffc21a;color:var(--violet)"><i class="ti ti-confetti"></i></span>'+
+        '<div><h4>'+esc(e.nom)+'</h4><div class="m">'+fmtRange(e)+(e.statut!=='confirmé'?' <span class="tag">'+esc(e.statut)+'</span>':'')+'</div></div></div>'+
+        '<div class="bd">'+(e.lieu?'<div class="m"><i class="ti ti-map-pin"></i> '+esc(e.lieu)+'</div>':'')+(e.note?'<div class="nt">'+esc(e.note)+'</div>':'')+'</div></div>',{maxWidth:300})
+      .addTo(map));
+  });
+}
+
+/* ---------- panneau ---------- */
+function renderLegende(){
+  const n={}; LIEUX.forEach(l=>n[l.cat]=(n[l.cat]||0)+1);
+  $('#leg').innerHTML=Object.entries(CATS).map(([k,c])=>'<button type="button" data-c="'+k+'" class="'+(catOff.has(k)?'off':'')+'" title="Afficher ou masquer">'+
+    '<span class="dot" style="background:'+c.c+'"><i class="ti ti-'+c.ic+'"></i></span>'+esc(c.nom)+' <span class="n">'+(n[k]||0)+'</span></button>').join('');
+}
+function renderList(){
+  const q=$('#q').value.trim().toLowerCase();
+  const ordre=Object.keys(CATS);
+  let h='';
+  BOUCLES.forEach(b=>{
+    const items=LIEUX.filter(l=>l.b===b.id && !catOff.has(l.cat) && (!q || (l.nom+' '+l.a).toLowerCase().includes(q)))
+      .sort((x,y)=>ordre.indexOf(x.cat)-ordre.indexOf(y.cat)||x.nom.localeCompare(y.nom,'fr'));
+    if(!items.length) return;
+    h+='<div class="bou"><button type="button" class="bh" data-b="'+b.id+'" title="Voir la boucle sur la carte"><img src="'+logo(b.id)+'" alt="">'+
+       '<span class="nm">'+esc(b.nom)+'</span><span class="n">'+items.length+' <i class="ti ti-zoom-in"></i></span></button>';
+    items.forEach(l=>{
+      const c=CATS[l.cat];
+      h+='<div class="it'+(l.id===curId?' cur':'')+'" data-id="'+l.id+'"><span class="dot" style="background:'+c.c+'"><i class="ti ti-'+c.ic+'"></i></span>'+
+         '<div class="tx"><div class="nm">'+esc(l.nom)+'</div><div class="q">'+(l.cr.length?quand(l).map(esc).join('<br>'):'à confirmer')+'</div></div></div>';
+    });
+    h+='</div>';
+  });
+  $('#list').innerHTML=h||'<div class="empty">Aucun lieu ne correspond.</div>';
+}
+function renderAgenda(){
+  const ev=aVenir(), passes=EVTS.filter(e=>e.f<today).sort((a,b)=>a.d.slice(5).localeCompare(b.d.slice(5)));
+  let h=ev.map(e=>{
+    const d=parse(e.d), b=e.b&&boucle(e.b);
+    return '<div class="ag" data-ev="'+EVTS.indexOf(e)+'"><div class="dt"><b>'+d.getDate()+'</b><span>'+MOIS[d.getMonth()]+'</span></div>'+
+      '<div><div class="nm">'+esc(e.nom)+(e.statut==='confirmé'?' <span class="tag ok">confirmé</span>':' <span class="tag">'+esc(e.statut)+'</span>')+'</div>'+
+      '<div class="m">'+fmtRange(e)+'</div>'+
+      '<div class="m">'+(b?'<img src="'+logo(b.id)+'" alt="">':'')+esc(e.lieu)+'</div>'+
+      (e.note?'<div class="m">'+esc(e.note)+'</div>':'')+'</div></div>';
+  }).join('')||'<div class="empty">Aucun événement annoncé pour l’instant.</div>';
+  const vac=(DATA.vacances||[]).filter(v=>v.f>=today).slice(0,3);
+  if(vac.length) h+='<details class="an"><summary>Vacances scolaires : écoles fermées</summary><ul>'+
+    vac.map(v=>'<li>'+esc(v.nom)+' <span>'+(v.d===v.f?dShort(v.d):'du '+dShort(v.d)+' au '+dShort(v.f))+'</span></li>').join('')+'</ul></details>';
+  if(passes.length) h+='<details class="an"><summary>Rendez-vous annuels (prochaines dates à guetter)</summary><ul>'+
+    passes.map(e=>'<li>'+esc(e.nom)+' <span>— '+esc(e.periode||dShort(e.d))+(e.lieu?', '+esc(e.lieu):'')+'</span></li>').join('')+'</ul></details>';
+  $('#pAgenda').innerHTML=h;
+}
+function renderVac(){
+  const v=(DATA.vacances||[]).find(v=>today>=v.d && today<=v.f);
+  $('#vac').hidden=!v;
+  if(v) $('#vac').innerHTML='<i class="ti ti-beach"></i> <b>'+esc(v.nom)+'</b> jusqu’au '+dShort(v.f)+' : les écoles sont fermées.';
+  $('#vac').className='vac';
+}
+
+/* ---------- interactions ---------- */
+$('#tabs').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#pLieux').hidden=b.dataset.t!=='lieux'; $('#pAgenda').hidden=b.dataset.t!=='agenda';
+});
+$('#leg').addEventListener('click',e=>{
+  const b=e.target.closest('[data-c]'); if(!b) return;
+  catOff.has(b.dataset.c)?catOff.delete(b.dataset.c):catOff.add(b.dataset.c);
+  renderLegende(); renderList(); refreshMarkers();
+});
+$('#q').addEventListener('input',()=>{ renderList(); refreshMarkers(); });
+$('#list').addEventListener('click',e=>{
+  const bh=e.target.closest('.bh');
+  if(bh){ if(isMobile()) sheet(false); choisirBoucle(bh.dataset.b); return; }
+  const it=e.target.closest('.it'); if(!it) return;
+  const l=LIEUX.find(x=>x.id===it.dataset.id), m=markers[l.id];
+  if(isMobile()) sheet(false);
+  if(!map.hasLayer(m)) m.addTo(map);
+  map.setView([l.lat,l.lon],Math.max(map.getZoom(),16));
+  setTimeout(()=>m.openPopup(),isMobile()?320:0);
+});
+$('#pAgenda').addEventListener('click',e=>{
+  const a=e.target.closest('[data-ev]'); if(!a) return;
+  const ev=EVTS[+a.dataset.ev];
+  const pts=ev.lat!=null?[[ev.lat,ev.lon]]:(ev.refs||[]).map(id=>LIEUX.find(l=>l.id===id)).filter(Boolean).map(l=>[l.lat,l.lon]);
+  if(!pts.length) return;
+  if(isMobile()) sheet(false);
+  pts.length===1?map.setView(pts[0],16):map.fitBounds(pts,{padding:[50,50]});
+});
+
+/* ---------- feuille coulissante (mobile) ---------- */
+function sheet(open){
+  $('#side').classList.toggle('collapsed',!open);
+  document.documentElement.style.setProperty('--grabH',$('#grab').offsetHeight+'px');
+  setTimeout(()=>map.invalidateSize(),300);
+}
+$('#grabBtn').onclick=()=>sheet($('#side').classList.contains('collapsed'));
+window.addEventListener('resize',()=>{ if(!isMobile()) $('#side').classList.remove('collapsed'); });
+
+/* ---------- init ---------- */
+function vueInitiale(){
+  // lien partagé : #PN zoome directement sur la boucle
+  const id=decodeURIComponent(location.hash.slice(1)).toUpperCase();
+  choisirBoucle(zoneLayers[id]?id:null);
+}
+window.addEventListener('hashchange',vueInitiale);
+// la carte doit connaître sa vraie taille (rotation du téléphone, fenêtre redimensionnée)
+new ResizeObserver(()=>map.invalidateSize()).observe($('#map'));
+Promise.all([fetch('lieux.json',{cache:'no-cache'}).then(r=>r.json()),fetch('zones.json',{cache:'no-cache'}).then(r=>r.json())]).then(([d,z])=>{
+  DATA=d; LIEUX=d.lieux; BOUCLES=d.boucles; CATS=d.categories; EVTS=d.evenements||[]; ZONES=z;
+  $('#nL').textContent=LIEUX.length; $('#nA').textContent=aVenir().length;
+  $('#grabTxt').textContent=LIEUX.length+' lieux · '+aVenir().length+' événements à venir';
+  drawZones(); drawMarkers(); refreshMarkers(); drawEvents();
+  renderVac(); renderLegende(); renderList(); renderAgenda();
+  map.invalidateSize(); vueInitiale();
+  if(isMobile()) sheet(false);
+}).catch(err=>{
+  console.error(err);
+  $('#list').innerHTML='<div class="empty">Impossible de charger les données. Ouvrez la page via un serveur local '+
+    '(<code>python -m http.server 8778</code>), pas par double-clic.</div>';
+});
+</script>
+</body>
+</html>

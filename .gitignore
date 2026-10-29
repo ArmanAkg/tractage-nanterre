@@ -1,0 +1,5 @@
+# fichiers de travail
+.claude/
+outils/cache_osm.json
+.DS_Store
+Thumbs.db
